@@ -19,7 +19,7 @@ def GT(mess=None):
 
 
 def GV(mess=None):
-    version = '#GVRLLh151Cs047Ab'
+    version = '#GVRLLh151Cs047'
     Write(version + ACK)
 
 
@@ -36,10 +36,38 @@ def SC(mess=None):
         print(f'{channels.index(i)+1}.{"#":i}{i}' for i in channels)
 
 
+class gh(object):
+    """docstring for GH"""
+
+    def __init__(self, mess=None):
+        super(gh, self).__init__()
+        self.hash = self.getHash(mess)
+
+    def getHash(self, mess=None):
+        if mess:
+            return self.hashCalculate(mess)
+        else:
+            return ('08', '65530',)
+
+    def hashCalculate(self, mess):
+        strMess = byteToStr(mess)
+        points = strMess[3:5]
+        crc = strMess[6:11]
+        return points, crc
+
+    def returnHash(self, mess):
+        result = self.hash
+        self.hash = self.hashCalculate(mess)
+        return result
+
+
+GH = gh().returnHash
+
 COMMANDS = {'GT': GT,
             'GV': GV,
             'GC': GC,
             'SC': SC,
+            'GH': GH
             }
 
 
@@ -48,7 +76,7 @@ connect = Connection('/dev/ttyUSB0')
 while True:
     mess = connect.sr.read_until(b'\x05') + connect.sr.read(2)
     if CRC16(byteToStr(mess[:-2])) == mess[-2:]:
-        # print(mess[:-2])
+        print(mess[:-2])
         if b'\x24' in mess:
             req = byteToStr(mess[mess.index(b'\x24') + 1:mess.index(b'\x24') + 3])
             try:
