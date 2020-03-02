@@ -1,3 +1,10 @@
 #!/usr/bin/env python3
 
 # by blues
+
+from utils.SerialUtils import *
+from utils.Protocol import *
+
+print(NAK)
+
+connect = Connection('/dev/ttyUSB0')

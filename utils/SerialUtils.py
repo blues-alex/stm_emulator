@@ -4,20 +4,6 @@
 import serial
 import time
 
-SOH = '\x01'
-STX = '\x02'
-ETX = '\x03'
-EOT = '\x04'
-ENQ = '\x05'
-ACK = '\x06'
-BEL = '\x07'
-WAIT = '\x11'
-DONE = '\x12'
-FAIL = '\x13'
-NAK = '\x15'
-RS = '\x1e'
-US = '\x1f'
-
 
 class Connection(object):
     """docstring for Connection"""
