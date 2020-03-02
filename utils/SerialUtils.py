@@ -1,8 +1,59 @@
 # by blues
 
 
-import serial
 import time
+import serial
+
+
+def CRC16(mess):
+    poly = 0x1021
+    Init = 0xffff
+    # xor = 0x0001
+    crc = Init
+    for b in mess:
+        crc ^= (ord(b) << 8)
+        for _ in range(8):
+            if (crc & 0x8000):
+                crc = (crc << 1) ^ poly
+            else:
+                crc = (crc << 1)
+    Hex = '%04x' % (crc & Init)
+    return crcToBytes(Hex)
+
+
+def crcToBytes(mess):
+    return bytes.fromhex(mess[:2]) + bytes.fromhex(mess[2:])
+
+
+def crcAdd(mess):
+    return bytes(mess, 'ascii') + CRC16(mess)
+
+
+def byteToStr(mess):
+    return mess.decode('ascii', 'replace')
+
+
+def checkData(data):
+    if len(data):
+        result = {}
+        if data[0] == 35:
+            result['answer'] = data[1:3]
+            data, crc = data[:-2], data[-2:]
+            if CRC16(byteToStr(data)) == crc:
+                result['mess'] = data[3:-1]
+                result['check'] = True
+        else:
+            result['answer'] = ''
+            data, crc = data[:-2], data[-2:]
+            if CRC16(byteToStr(data)) == crc:
+                result['mess'] = data
+                result['check'] = True
+            else:
+                result['mess'] = data
+                result['check'] = False
+    else:
+        result = False
+    return result
 
 
 class Connection(object):
@@ -15,52 +66,6 @@ class Connection(object):
 
         self.sr = serial.Serial(self.port)
         self.sr.timeout = self.TIMEOUT
-
-        def CRC16(self, mess):
-            poly = 0x1021
-            Init = 0xffff
-            # xor = 0x0001
-            crc = Init
-            for b in mess:
-                crc ^= (ord(b) << 8)
-                for _ in range(8):
-                    if (crc & 0x8000):
-                        crc = (crc << 1) ^ poly
-                    else:
-                        crc = (crc << 1)
-            Hex = '%04x' % (crc & Init)
-            return self.crcToBytes(Hex)
-
-        def crcToBytes(self, mess):
-            return bytes.fromhex(mess[:2]) + bytes.fromhex(mess[2:])
-
-        def crcAdd(self, mess):
-            return bytes(mess, 'utf-8') + CRC16(mess)
-
-        def byteToStr(self, mess):
-            return mess.decode('utf-8', 'replace')
-
-        def checkData(self, data):
-            if len(data):
-                result = {}
-                if data[0] == 35:
-                    result['answer'] = data[1:3]
-                    data, crc = data[:-2], data[-2:]
-                    if CRC16(byteToStr(data)) == crc:
-                        result['mess'] = data[3:-1]
-                        result['check'] = True
-                else:
-                    result['answer'] = ''
-                    data, crc = data[:-2], data[-2:]
-                    if CRC16(byteToStr(data)) == crc:
-                        result['mess'] = data
-                        result['check'] = True
-                    else:
-                        result['mess'] = data
-                        result['check'] = False
-            else:
-                result = False
-            return result
 
         def writeMessage(self, mess):
             result = b''

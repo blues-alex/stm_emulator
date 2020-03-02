@@ -4,7 +4,19 @@
 
 from utils.SerialUtils import *
 from utils.Protocol import *
+import time
 
 print(NAK)
 
 connect = Connection('/dev/ttyUSB0')
+
+while True:
+    mess = connect.sr.read_until(b'\x05') + connect.sr.read(2)
+    if CRC16(byteToStr(mess[:-2])) == mess[-2:]:
+        print(mess[:-2])
+        if b'\x24' in mess:
+            req = byteToStr(mess[mess.index(b'\x24') + 1:mess.index(b'\x24') + 3])
+            print(req)
+            if req == 'GT':
+                answer = time.strftime('#GT%H%M%d01%m%y') + ACK
+                connect.sr.write(crcAdd(answer))
