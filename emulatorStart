@@ -5,18 +5,53 @@
 from utils.SerialUtils import *
 from utils.Protocol import *
 import time
+from random import randint
 
-print(NAK)
+
+def Write(mess: str):
+    connect.sr.write(
+        crcAdd(mess))
+
+
+def GT(mess=None):
+    tm = time.strftime('#GT%H%M%d0%w%m%y')
+    Write(tm + ACK)
+
+
+def GV(mess=None):
+    version = '#GVRLLh151Cs047Ab'
+    Write(version + ACK)
+
+
+def GC(mess=None):
+    channels = f"#GC{US.join(str(randint(0, 10001) for i in range(10)))}{ACK}"
+    Write(channels)
+
+
+def SC(mess=None):
+    Write(DONE)
+    if mess:
+        channels = byteToStr(mess)[mess.index(b'05') + 1:mess.index(bytes(ENQ))].split(US)
+        channels = [(10000 - int(i)) / 100 for i in channels]
+        print(f'{channels.index(i)+1}.{"#":i}{i}' for i in channels)
+
+
+COMMANDS = {'GT': GT,
+            'GV': GV,
+            'GC': GC,
+            'SC': SC,
+            }
+
 
 connect = Connection('/dev/ttyUSB0')
 
 while True:
     mess = connect.sr.read_until(b'\x05') + connect.sr.read(2)
     if CRC16(byteToStr(mess[:-2])) == mess[-2:]:
-        print(mess[:-2])
+        # print(mess[:-2])
         if b'\x24' in mess:
             req = byteToStr(mess[mess.index(b'\x24') + 1:mess.index(b'\x24') + 3])
-            print(req)
-            if req == 'GT':
-                answer = time.strftime('#GT%H%M%d01%m%y') + ACK
-                connect.sr.write(crcAdd(answer))
+            try:
+                COMMANDS[req](mess)
+            except Exception as err:
+                print(err)
