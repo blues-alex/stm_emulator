@@ -5,6 +5,29 @@ import time
 import serial
 
 
+def logger(name: str, loc: dict):
+    tm = time.strftime("[ %d.%m %H:%M:%S ]")
+    relult = [f"    {i} = {loc[i]}" for i in loc if type(loc[i]) in [dict, list, int, float, str]]
+    print(tm)
+    for n in relult:
+        print(n)
+
+
+def to8bytes(cycle):
+    '''значения из матрицы cycle переводятся в 16и битное число байты которого развернуты.
+        вся матрица складывается в строку hex значений и преобразуется в байты,
+        Принимает список списков по 10 значений int от 0 до 10000 + int время в минутах от начала суток'''
+
+    result = b''
+    for p in cycle:
+        for b in p:
+            n = f"{b:04x}"
+            n = n[-2:] + n[:-2]
+            # из строки с hex значениями в строку байт
+            result += bytes.fromhex(n)
+    return result
+
+
 def CRC16(mess):
     poly = 0x1021
     Init = 0xffff
@@ -19,6 +42,22 @@ def CRC16(mess):
                 crc = (crc << 1)
     Hex = '%04x' % (crc & Init)
     return crcToBytes(Hex)
+
+
+def cycleCRC(b):
+    ''' подсчет значения CRC суточного цикла'''
+    poly = 0x1021
+    Init = 0xffff
+    crc = Init
+    for i in range(len(b)):
+        crc ^= (b[i] << 8)
+        for _ in range(8):
+            if (crc & 0x8000):
+                crc = (crc << 1) ^ poly
+            else:
+                crc = (crc << 1)
+    CRC = (crc & Init)
+    return CRC
 
 
 def crcToBytes(mess):

@@ -4,82 +4,132 @@
 
 from utils.SerialUtils import *
 from utils.Protocol import *
-import time
-from random import randint
+from utils.Commands import *
 
 
-def Write(mess: str):
-    connect.sr.write(
-        crcAdd(mess))
-
-
-def GT(mess=None):
-    tm = time.strftime('#GT%H%M%d0%w%m%y')
-    Write(tm + ACK)
-
-
-def GV(mess=None):
-    version = '#GVRLLh151Cs047'
-    Write(version + ACK)
-
-
-def GC(mess=None):
-    channels = f"#GC{US.join(str(randint(0, 10001) for i in range(10)))}{ACK}"
-    Write(channels)
-
-
-def SC(mess=None):
-    Write(DONE)
-    if mess:
-        channels = byteToStr(mess)[mess.index(b'05') + 1:mess.index(bytes(ENQ))].split(US)
-        channels = [(10000 - int(i)) / 100 for i in channels]
-        print(f'{channels.index(i)+1}.{"#":i}{i}' for i in channels)
-
-
-class gh(object):
-    """docstring for GH"""
-
-    def __init__(self, mess=None):
-        super(gh, self).__init__()
-        self.hash = self.getHash(mess)
-
-    def getHash(self, mess=None):
-        if mess:
-            return self.hashCalculate(mess)
-        else:
-            return ('08', '65530',)
-
-    def hashCalculate(self, mess):
-        strMess = byteToStr(mess)
-        points = strMess[3:5]
-        crc = strMess[6:11]
-        return points, crc
-
-    def returnHash(self, mess):
-        result = self.hash
-        self.hash = self.hashCalculate(mess)
-        return result
-
-
-GH = gh().returnHash
+DC = gh()
+GH = DC.returnHash
+M = Mode()
+SM = M.setMode
+GM = M.getMode
 
 COMMANDS = {'GT': GT,
             'GV': GV,
             'GC': GC,
             'SC': SC,
-            'GH': GH
+            'GH': GH,
+            'SM': SM,
+            'GM': GM,
+            'GL': GL,
             }
 
 
-connect = Connection('/dev/ttyUSB0')
+# connect = Connection('/dev/ttyUSB1')
+# connect.sr.timeout = 0.01
 
-while True:
-    mess = connect.sr.read_until(b'\x05') + connect.sr.read(2)
-    if CRC16(byteToStr(mess[:-2])) == mess[-2:]:
-        print(mess[:-2])
+
+def messCrcCheck(mess):
+    if type(mess) == bytes:
+        return CRC16(byteToStr(mess[:-2])) == mess[-2:]
+    else:
+        return CRC16(mess[:-2]) == mess[-2:]
+
+
+# def readMess(connect):
+
+
+# while True:
+#     mess = connect.sr.read_until()
+#     print(mess[:-2])
+#     if messCrcCheck(mess):
+#         if b'\x24' in mess:
+#             req = byteToStr(mess[mess.index(b'\x24') + 1:mess.index(b'\x24') + 3])
+#             COMMANDS[req](connect=connect, mess=mess)
+#         elif mess[0] in [1, 3, 4]:
+#             Write(ACK, connect)
+#             print(mess, 'CYCLE_WRITE')
+#             points = 0
+#             cycle = []
+#             while True:
+#                 # print('CYCLE 2')
+#                 point = connect.sr.read_until()
+#                 # print(point)
+#                 if (US in byteToStr(point)) and (RS in byteToStr(point)):
+#                     if messCrcCheck(point):
+#                         parse_point = [i for i in byteToStr(point).split(RS)[0].split(US)]
+#                         parse_point.append(HoursToMin(parse_point.pop(0)))
+#                         parse_point = [int(i) for i in parse_point]
+#                         print('parse point = ', parse_point)
+#                         cycle.append(parse_point)
+#                         Write(ACK, connect)
+#                 elif len(point) and point[0] == 3:
+#                     DC.cycle = cycle
+#                     DC.setHash(DC.HashCalc(cycle=cycle))
+#                     Write(ACK, connect)
+#                 elif len(point) and point[0] == 4:
+#                     Write(ACK, connect)
+#                     break
+
+
+def Reader(connect):
+    mess = b''
+    while True:
+        b = connect.read()
+        if b in [b'$', b'\x01']:
+            mess += b
+            while b not in [b'\x05', b'\x02']:
+                # print(mess)
+                b = connect.read()
+                mess += b
+            mess += connect.read(2)
+            break
+    return mess
+
+
+def Handler(mess, connect):
+    if messCrcCheck(mess):
         if b'\x24' in mess:
             req = byteToStr(mess[mess.index(b'\x24') + 1:mess.index(b'\x24') + 3])
-            try:
-                COMMANDS[req](mess)
-            except Exception as err:
-                print(err)
+            COMMANDS[req](connect=connect, mess=mess)
+        elif mess[0] in [1, 3, 4]:
+            Write(ACK, connect)
+            print(mess, 'CYCLE_WRITE')
+            cycle = []
+            while True:
+                # print('CYCLE 2')
+                point = CycleReader(connect)
+                # print(point)
+                if (US in byteToStr(point)) and (RS in byteToStr(point)):
+                    if messCrcCheck(point):
+                        parse_point = [i for i in byteToStr(point).split(RS)[0].split(US)]
+                        parse_point.append(HoursToMin(parse_point.pop(0)))
+                        parse_point = [int(i) for i in parse_point]
+                        print('parse point = ', parse_point)
+                        cycle.append(parse_point)
+                        Write(ACK, connect)
+                elif len(point) and point[0] == 3:
+                    DC.cycle = cycle
+                    DC.setHash(DC.HashCalc(cycle=cycle))
+                    Write(ACK, connect)
+                elif len(point) and point[0] == 4:
+                    Write(ACK, connect)
+                    break
+
+
+def CycleReader(connect):
+    mess = b''
+    b = connect.read()
+    while b not in [b'\x1e', b'\x03', b'\x04']:
+        mess += connect.read()
+    return mess + connect.read(2)
+
+
+port = '/dev/ttyUSB1'
+timeout = 0.01
+baudrate = 9600
+
+with serial.Serial(port=port, baudrate=baudrate, timeout=timeout) as connect:
+    while True:
+        mess = Reader(connect)
+        # print(mess)
+        Handler(mess, connect)
