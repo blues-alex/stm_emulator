@@ -34,10 +34,10 @@ def GV(connect, mess=None):
 
 
 def GC(connect, mess=None):
-    logger(sys._getframe().f_code.co_name, locals())
     values = []
     for i in range(10):
         values.append(f"{randint(7000, 10001):05d}")
+    logger(sys._getframe().f_code.co_name, locals())
     channels = f"#GC{US.join(values)}{ACK}"
     Write(channels, connect)
 
