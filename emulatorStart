@@ -6,7 +6,9 @@ from utils.SerialUtils import *
 from utils.Protocol import *
 from utils.Commands import *
 
-
+virtTime = Time()
+GT = virtTime.getTime
+ST = virtTime.setTime
 DC = gh()
 GH = DC.returnHash
 M = Mode()
@@ -16,11 +18,12 @@ GM = M.getMode
 COMMANDS = {'GT': GT,
             'GV': GV,
             'GC': GC,
-            'SC': SC,
             'GH': GH,
             'SM': SM,
             'GM': GM,
             'GL': GL,
+            'SC': SC,
+            'ST': ST,
             }
 
 

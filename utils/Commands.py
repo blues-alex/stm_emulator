@@ -21,10 +21,10 @@ def GL(connect, mess=None):
     Write(f"#GL000{ACK}", connect)
 
 
-def GT(connect, mess=None):
-    tm = time.strftime('#GT%H%M%d0%w%m%y')
-    logger(sys._getframe().f_code.co_name, locals())
-    Write(tm + ACK, connect)
+# def GT(connect, mess=None):
+#     tm = time.strftime('#GT%H%M%d0%w%m%y')
+#     logger(sys._getframe().f_code.co_name, locals())
+#     Write(tm + ACK, connect)
 
 
 def GV(connect, mess=None):
@@ -34,10 +34,10 @@ def GV(connect, mess=None):
 
 
 def GC(connect, mess=None):
+    logger(sys._getframe().f_code.co_name, locals())
     values = []
     for i in range(10):
         values.append(f"{randint(7000, 10001):05d}")
-    logger(sys._getframe().f_code.co_name, locals())
     channels = f"#GC{US.join(values)}{ACK}"
     Write(channels, connect)
 
@@ -60,11 +60,48 @@ def SC(connect, mess=None):
     Write(DONE, connect)
     logger(sys._getframe().f_code.co_name, locals())
     if mess:
+        print(mess)
         mess = byteToStr(mess)
-        channels = mess[mess.index('05') + 3:mess.index(ENQ)].split(US)
+        channels = mess[mess.index('SC') + 5:mess.index(ENQ)].split(US)
         channels = [(10000 - int(i)) / 100 for i in channels if len(i)]
         for i in range(len(channels)):
             print(f'{i + 1}. {"#"*int(channels[i])} {channels[i]}')
+
+
+class Time(object):
+    """docstring for Time"""
+
+    def __init__(self):
+        super(Time, self).__init__()
+        self.deltaTime = None
+
+    def getTime(self, connect, mess=None):
+        print(self.deltaTime)
+        if self.deltaTime is not None:
+            tStruct = time.localtime(time.time() + self.deltaTime)
+            tm = time.strftime('#GT%H%M%d0%w%m%y', tStruct)
+            logger("GT", locals())
+            Write(tm + ACK, connect)
+        else:
+            tm = time.strftime('#GT%H%M%d0%w%m%y')
+            logger("GT", locals())
+            Write(tm + ACK, connect)
+
+    def setTime(self, connect, mess=None):
+        data = byteToStr(mess[3:-3]) if b'$ST' in mess else None
+        print(mess, data)
+        if not data:
+            return
+        tStruct = time.struct_time((
+            int('20' + data[-2:]),
+            int(data[-4:-2]),
+            int(data[4:6]),
+            int(data[:2]),
+            int(data[2:4]),
+            0, 0, 0, 0))
+        self.deltaTime = time.mktime(tStruct) - time.time()
+        logger("ST", locals())
+        Write(DONE, connect)
 
 
 class Mode(object):

@@ -7,7 +7,7 @@ import serial
 
 def logger(name: str, loc: dict):
     tm = time.strftime("[ %d.%m %H:%M:%S ]")
-    relult = [f"    {i} = {loc[i]}" for i in loc if type(loc[i]) in [dict, list, int, float, str]]
+    relult = [f"    {i} = {loc[i]}" for i in loc if type(loc[i]) in [ list, int, float, str]]
     print(tm)
     for n in relult:
         print(n)
