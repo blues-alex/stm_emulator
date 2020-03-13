@@ -5,12 +5,15 @@ import time
 import serial
 
 
-def logger(name: str, loc: dict):
+def logger(name: str, *args):
     tm = time.strftime("[ %d.%m %H:%M:%S ]")
-    relult = [f"    {i} = {loc[i]}" for i in loc if type(loc[i]) in [ list, int, float, str]]
     print(tm)
-    for n in relult:
-        print(n)
+    # if len(loc):
+    #     result = [f"    {i} = {loc[i]}" for i in loc if type(loc[i]) in [list, int, float, str]]
+    #     for n in result:
+    #         print(n)
+    for i in args:
+        print(i)
 
 
 def to8bytes(cycle):
@@ -23,7 +26,6 @@ def to8bytes(cycle):
         for b in p:
             n = f"{b:04x}"
             n = n[-2:] + n[:-2]
-            # из строки с hex значениями в строку байт
             result += bytes.fromhex(n)
     return result
 

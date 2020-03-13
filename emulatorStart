@@ -6,14 +6,14 @@ from utils.SerialUtils import *
 from utils.Protocol import *
 from utils.Commands import *
 
-virtTime = Time()
-GT = virtTime.getTime
-ST = virtTime.setTime
-DC = gh()
-GH = DC.returnHash
-M = Mode()
-SM = M.setMode
-GM = M.getMode
+DC = dc()
+GT = DC.getTime
+ST = DC.setTime
+GH = DC.returnHASH
+SM = DC.setMode
+GM = DC.getMode
+GC = DC.getChannels
+SC = DC.setChannels
 
 COMMANDS = {'GT': GT,
             'GV': GV,
@@ -62,6 +62,7 @@ def Handler(mess, connect):
         if b'\x24' in mess:
             req = byteToStr(mess[mess.index(b'\x24') + 1:mess.index(b'\x24') + 3])
             COMMANDS[req](connect=connect, mess=mess)
+            logger(req, mess)
         elif mess[0] in [1, 3, 4]:
             Write(ACK, connect)
             cycle = []
@@ -79,7 +80,7 @@ def Handler(mess, connect):
                 elif len(point) and point[0] == 3:
                     DC.cycle = cycle
                     DC.setHash(DC.HashCalc(cycle=cycle))
-                    print('New Cycle HASH = ', DC.returnHASH())
+                    print('New Cycle HASH = ', DC.HASH)
                     Write(ACK, connect)
                 elif len(point) and point[0] == 4:
                     Write(ACK, connect)
