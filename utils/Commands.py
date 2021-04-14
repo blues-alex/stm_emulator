@@ -117,7 +117,30 @@ class Mode(object):
         Write(DONE, connect)
 
 
-class dc(Mode, Time):
+class State(object):
+
+    def __init__(self):
+        super(State, self).__init__()
+
+
+    def getTemperature(self, mess, connect):
+        Write(f"#GA0505{ACK}", connect)
+        logger(sys._getframe().f_code.co_name, locals())
+
+    def getFan(self, mess, connect):
+        Write(f"#GS{randint(0,9999):04d}{ACK}", connect)
+        logger(sys._getframe().f_code.co_name, locals())
+
+
+    def getClockCalibration(self, mess, connect):
+        Write(f"#GL1000{ACK}", connect)
+        logger(sys._getframe().f_code.co_name, locals())
+
+    def getPWMDivider(self, mess, connect):
+        Write(f"#GP{randint(0,65535):05d}{ACK}", connect)
+        logger(sys._getframe().f_code.co_name, locals())
+
+class dc(Mode, Time, State):
     """class - daily cycle object, functionary emulation of GH, SC, GC and cycle write command"""
 
     def __init__(self):
