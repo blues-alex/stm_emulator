@@ -96,7 +96,7 @@ def Handler(mess, connect):
                     break
 
 
-port = 'none'
+port = 'COM5'
 if (len(sys.argv) > 1):
     port = sys.argv[1]
 
