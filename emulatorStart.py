@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 # by blues
 
@@ -96,7 +96,12 @@ def Handler(mess, connect):
                     break
 
 
-port = 'COM6'
+port = 'none'
+if (len(sys.argv) > 1):
+    port = sys.argv[1]
+
+print('Listening on device:', port)
+
 timeout = 0.01
 baudrate = 9600
 
