@@ -187,7 +187,7 @@ class dc(Mode, Time, State):
             self.channels = self.calcChannels(self.cycle, timeNow)
             # Write(f"#GC{US.join(channels)}{ACK}", connect)
         print(self.channels)
-        Write(f"#GC{US.join([f'{n:05d}' for n in self.channels])}{ACK}", connect)
+        Write(f"#GC{US.join([f'{10000-n:05d}' for n in self.channels])}{ACK}", connect)
 
     def HashCalc(self, cycle=None):
         if not cycle:
