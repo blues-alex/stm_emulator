@@ -5,17 +5,6 @@ import time
 import serial
 
 
-def logger(name: str, *args):
-    tm = time.strftime("[ %d.%m %H:%M:%S ]")
-    print(tm)
-    # if len(loc):
-    #     result = [f"    {i} = {loc[i]}" for i in loc if type(loc[i]) in [list, int, float, str]]
-    #     for n in result:
-    #         print(n)
-    for i in args:
-        print(i)
-
-
 def to8bytes(cycle):
     '''значения из матрицы cycle переводятся в 16и битное число байты которого развернуты.
         вся матрица складывается в строку hex значений и преобразуется в байты,
@@ -30,7 +19,8 @@ def to8bytes(cycle):
     return result
 
 
-def CRC16(mess):
+def CRC16(mess: str) -> str:
+    '''Calc CRC16 of message'''
     poly = 0x1021
     Init = 0xffff
     # xor = 0x0001
@@ -46,7 +36,7 @@ def CRC16(mess):
     return crcToBytes(Hex)
 
 
-def cycleCRC(b):
+def cycleCRC(b: bytes) -> int:
     ''' подсчет значения CRC суточного цикла'''
     poly = 0x1021
     Init = 0xffff
@@ -62,19 +52,19 @@ def cycleCRC(b):
     return CRC
 
 
-def crcToBytes(mess):
+def crcToBytes(mess: str) -> bytes:
     return bytes.fromhex(mess[:2]) + bytes.fromhex(mess[2:])
 
 
-def crcAdd(mess):
+def crcAdd(mess: str) -> str:
     return bytes(mess, 'ascii') + CRC16(mess)
 
 
-def byteToStr(mess):
+def byteToStr(mess: bytes) -> str:
     return mess.decode('ascii', 'replace')
 
 
-def checkData(data):
+def checkData(data: bytes):
     if len(data):
         result = {}
         if data[0] == 35:
@@ -97,7 +87,7 @@ def checkData(data):
     return result
 
 
-class Connection(object):
+class Connection:
     """docstring for Connection"""
 
     def __init__(self, port=None):

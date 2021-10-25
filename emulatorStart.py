@@ -2,6 +2,8 @@
 
 # by blues
 
+import sys
+# from loguru import logger
 from utils.SerialUtils import *
 from utils.Protocol import *
 from utils.Commands import *
@@ -31,7 +33,7 @@ COMMANDS = {'GT': GT,
             'SC': SC,
             'ST': ST,
             'GL': GL,
-	    'GP': GP
+            'GP': GP
             }
 
 
@@ -69,9 +71,8 @@ def Handler(mess, connect):
     if messCrcCheck(mess):
         if b'\x24' in mess:
             req = byteToStr(mess[mess.index(b'\x24') + 1:mess.index(b'\x24') + 3])
-            print('Req:', req)
             COMMANDS[req](connect=connect, mess=mess)
-            logger(req, mess)
+            logger.debug(f"Incomming Request: {req}, mess= {mess}")
         elif mess[0] in [1, 3, 4]:
             Write(ACK, connect)
             cycle = []
@@ -100,13 +101,15 @@ port = 'COM6'
 if (len(sys.argv) > 1):
     port = sys.argv[1]
 
-print('Listening on device:', port)
+logger.info('Listening on device:', port)
 
 timeout = 0.01
 baudrate = 9600
 
 with serial.Serial(port=port, baudrate=baudrate, timeout=timeout) as connect:
-    while True:
-        mess = Reader(connect)
-        print(mess)
-        Handler(mess, connect)
+    try:
+        while True:
+            mess = Reader(connect)
+            Handler(mess, connect)
+    except KeyboardInterrupt:
+        logger.info(f"Exit!")
