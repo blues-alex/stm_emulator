@@ -8,8 +8,7 @@ from random import randint
 from loguru import logger
 
 
-if not os.path.isdir('./logs'):
-    os.mkdir('./logs')
+
 
 logger.add(
     format="{level}\t{time:YY-MM-DD HH:mm:ss.ms}\t{message}",
