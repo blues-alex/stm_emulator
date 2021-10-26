@@ -12,7 +12,6 @@ if not os.path.isdir('./logs'):
     os.mkdir('./logs')
 
 logger.add(
-    "./logs/stmEmulator.log",
     format="{level}\t{time:YY-MM-DD HH:mm:ss.ms}\t{message}",
     rotation="1 MB",
     compression="tar.gz"
