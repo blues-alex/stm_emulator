@@ -1,0 +1,33 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_PIPELINE_IID
+  DEV_SERVER_IP: gitlab.beautifulreef.ru
+  DEV_SERVER_USER: dev
+
+build:
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+  script:
+    - /kaniko/executor --cache --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $IMAGE_NAME
+  stage: build
+
+deploy:
+  stage: deploy
+  image: creatiwww/docker-compose:latest
+  cache: {}
+  before_script:
+    - echo $CI_JOB_TOKEN | docker login -u gitlab-ci-token $CI_REGISTRY --password-stdin
+  script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_DEV_SERVER_PRIVATE_KEY" | ssh-add - > /dev/null
+    - echo "IMAGE_APP_TAG=$IMAGE_NAME" >> .env
+    - docker-compose -f docker-compose.yml -H "ssh://$DEV_SERVER_USER@$DEV_SERVER_IP" down --remove-orphans
+    - docker-compose -f docker-compose.yml -H "ssh://$DEV_SERVER_USER@$DEV_SERVER_IP" pull
+    - docker-compose -f docker-compose.yml -H "ssh://$DEV_SERVER_USER@$DEV_SERVER_IP" up -d

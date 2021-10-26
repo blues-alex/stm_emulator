@@ -1,0 +1,27 @@
+version: '3.4'
+
+x-emulator-tmpl: &emulator_tmpl
+  image: ${IMAGE_APP_TAG}
+  networks: ["lcs"]
+  privileged: true
+  deploy:
+    restart_policy:
+      condition: on-failure
+  volumes:
+    - /dev:/dev
+
+services:
+  emulator1:
+    <<: *emulator_tmpl
+    command: "/dev/tnt1"
+
+  emulator2:
+    <<: *emulator_tmpl
+    command: "/dev/tnt3"
+
+  emulator3:
+    <<: *emulator_tmpl
+    command: "/dev/tnt5"
+
+networks:
+  lcs:
