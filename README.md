@@ -10,4 +10,3 @@ poetry shell
 poetry install
 python3 ./emulatorStart.py ${/dev/tnt[X]}
 ```
-* Logs directory "./logs"
