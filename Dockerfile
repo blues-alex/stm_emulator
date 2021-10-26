@@ -12,7 +12,7 @@ ENV \
 RUN apk add --no-cache curl && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 
 WORKDIR /app
-COPY poetry.lock pyproject.toml /app
+COPY poetry.lock pyproject.toml /app/
 
 RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi
