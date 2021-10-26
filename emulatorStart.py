@@ -1,9 +1,7 @@
-#!/usr/bin/python3
-
-# by blues
+#!/usr/bin/env python3
 
 import sys
-# from loguru import logger
+import pprint
 from utils.SerialUtils import *
 from utils.Protocol import *
 from utils.Commands import *
@@ -50,7 +48,7 @@ def Reader(connect):
         b = connect.read()
         if b in [b'$', b'\x01']:
             mess += b
-            while b not in [b'\x05', b'\x02']:
+            while b not in map(bytes, [[5], [2]]):
                 b = connect.read()
                 mess += b
             mess += connect.read(2)
@@ -61,9 +59,13 @@ def Reader(connect):
 def CycleReader(connect):
     mess = b''
     b = connect.read()
-    while b not in [b'\x1e', b'\x03', b'\x04']:
+    if b in map(bytes, [[4], [3]]):
+        # logger.debug(f"End of cycle: {b[0]:02x}")
+        return b
+    while b not in map(bytes, [[4], [3], [0x1e]]):
         b = connect.read()
         mess += b
+    # logger.debug(f"cycleWriter mess:\n{mess}")
     return mess + connect.read(2)
 
 
@@ -74,12 +76,11 @@ def Handler(mess, connect):
             COMMANDS[req](connect=connect, mess=mess)
             logger.debug(f"Incomming Request: {req}, mess= {mess}")
         elif mess[0] in [1, 3, 4]:
+            logger.info(f"Start write cycle {mess}")
             Write(ACK, connect)
             cycle = []
             while True:
-                # print('CYCLE 2')
                 point = CycleReader(connect)
-                # print(point)
                 if (US in byteToStr(point)) and (RS in byteToStr(point)):
                     if messCrcCheck(point):
                         parse_point = [i for i in byteToStr(point).split(RS)[0].split(US)]
@@ -90,9 +91,11 @@ def Handler(mess, connect):
                 elif len(point) and point[0] == 3:
                     DC.cycle = cycle
                     DC.setHash(DC.HashCalc(cycle=cycle))
-                    print('New Cycle HASH = ', DC.HASH)
+                    logger.success(f"New cycle: \n{pprint.pformat(cycle)}")
+                    logger.info(f"New cycle HASH = {DC.HASH}")
                     Write(ACK, connect)
                 elif len(point) and point[0] == 4:
+                    logger.success(f"End of writing cycle. Sending ACK.")
                     Write(ACK, connect)
                     break
 
@@ -107,9 +110,12 @@ timeout = 0.01
 baudrate = 9600
 
 with serial.Serial(port=port, baudrate=baudrate, timeout=timeout) as connect:
+    n = 0
     try:
         while True:
             mess = Reader(connect)
+            logger.debug(f'[{n}] {mess}')
             Handler(mess, connect)
+            n += 1
     except KeyboardInterrupt:
         logger.info(f"Exit!")
