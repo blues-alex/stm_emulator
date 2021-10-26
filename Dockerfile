@@ -2,17 +2,15 @@ FROM python:3.9-alpine
 
 ENV \
   PYTHONFAULTHANDLER=1 \
+  PYTHONDONTWRITEBYTECODE=1 \
   PYTHONUNBUFFERED=1 \
   PYTHONHASHSEED=random \
   PIP_NO_CACHE_DIR=off \
   PIP_DISABLE_PIP_VERSION_CHECK=on \
-  PIP_DEFAULT_TIMEOUT=100 \
-  POETRY_VERSION=1.0.0 \
-  POETRY_HOME="/opt/poetry"
+  PIP_DEFAULT_TIMEOUT=100
 
-ENV PATH="$POETRY_HOME/bin:$PATH"
 
-RUN apk add --no-cache curl && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+RUN apk add --no-cache curl gcc libressl-dev musl-dev libffi-dev && pip install poetry
 
 WORKDIR /app
 COPY poetry.lock pyproject.toml /app/
