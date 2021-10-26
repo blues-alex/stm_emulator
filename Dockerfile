@@ -9,7 +9,7 @@ ENV \
   PIP_DEFAULT_TIMEOUT=100 \
   POETRY_VERSION=1.0.0
 
-RUN apk add --no-cache curl && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+RUN pip install poetry
 
 WORKDIR /app
 COPY poetry.lock pyproject.toml /app/
