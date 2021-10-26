@@ -8,12 +8,6 @@ from random import randint
 from loguru import logger
 
 
-logger.add(sys.stdout,
-           format="{level}\t{time:YY-MM-DD HH:mm:ss.ms}\t{message}",
-           rotation="1 MB",
-           compression="tar.gz"
-           )
-
 ModeTimer = 1.5 * 60  # min * 60
 
 
