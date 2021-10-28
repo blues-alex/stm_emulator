@@ -8,6 +8,17 @@ from random import randint
 from loguru import logger
 
 
+config = {
+    "handlers": [
+        {
+            "sink": sys.stdout,
+            "format": "<level>{level}</level> | <cyan>{line}</cyan> | <level>{message}</level>",
+        }
+    ]
+}
+
+logger.configure(**config)
+
 ModeTimer = 1.5 * 60  # min * 60
 
 
