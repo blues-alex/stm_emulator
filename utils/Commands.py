@@ -101,7 +101,7 @@ class Mode:
         mess = byteToStr(mess)
         mode = int(mess[mess.index('SM') + 2])
         self.mode = f'{mode}0'
-        self.timer = time.monotonic()
+        self.timer = time.monotonic() if self.mode == '20' else None
         Write(DONE, connect)
         logger.success(f"[SM]: Mode= {self.mode}")
 
