@@ -163,10 +163,13 @@ class dc(Mode, Time, State):
 
     def setChannels(self, mess, connect):
         mess = byteToStr(mess)
-        self.channels = [10000 - int(i)
-                         for i in mess[mess.index('SC') + 5:mess.index(ENQ)].split(US)]
-        Write(DONE, connect)
-        logger.success(f"[SC] Channels: {self.channels}")
+        if self.mode == '20':
+            self.channels = [10000 - int(i)
+                             for i in mess[mess.index('SC') + 5:mess.index(ENQ)].split(US)]
+            Write(DONE, connect)
+            logger.success(f"[SC] Channels: {self.channels}")
+        else:
+            logger.warning(f"Received [SC] message but not write values to controller, Mode:{self.mode}!")
 
     def getChannels(self, mess, connect):
         if self.mode == '20':
