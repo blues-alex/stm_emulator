@@ -47,7 +47,6 @@ class Time:
         return inSec
 
     def getTime(self, connect, mess=None):
-        print(self.deltaTime)
         if self.deltaTime is not None:
             tStruct = time.localtime(time.time() + self.deltaTime)
             tm = time.strftime('#GT%H%M%d0%w%m%y', tStruct)
