@@ -104,7 +104,7 @@ port = 'COM6'
 if (len(sys.argv) > 1):
     port = sys.argv[1]
 
-logger.info('Listening on device:', port)
+logger.info(f'Listening on device: {port}')
 
 timeout = 0.01
 baudrate = 9600

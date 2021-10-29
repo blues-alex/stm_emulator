@@ -7,19 +7,10 @@ from utils.Protocol import *
 from random import randint
 from loguru import logger
 
+logger.remove()
+logger.add(sys.stdout, format="<level>{level: <8}</level>|<blue>ln: {line: <3}</blue>|  <level>{message}</level>")
 
-config = {
-    "handlers": [
-        {
-            "sink": sys.stdout,
-            "format": "<level>{level}</level> | <cyan>{line}</cyan> | <level>{message}</level>",
-        }
-    ]
-}
-
-logger.configure(**config)
-
-ModeTimer = 1.5 * 60  # min * 60
+ModeTimer = 15 * 60  # min * 60
 
 
 def HoursToMin(tm: str):
@@ -98,6 +89,8 @@ class Mode:
             return time.monotonic() - self.timer
 
     def getMode(self, mess, connect):
+        if self.timer:
+            logger.debug(f"mode timer: {self.timer}, ModeTimer: {ModeTimer}, func: {self._getTimer()}")
         if self._getTimer() >= ModeTimer:
             self.mode = '10'
             self.timer = None
@@ -108,6 +101,7 @@ class Mode:
         mess = byteToStr(mess)
         mode = int(mess[mess.index('SM') + 2])
         self.mode = f'{mode}0'
+        self.timer = time.monotonic()
         Write(DONE, connect)
         logger.success(f"[SM]: Mode= {self.mode}")
 
@@ -143,7 +137,7 @@ class dc(Mode, Time, State):
         super(dc, self).__init__()
         self.HASH = ('06', '60218')
         self.cycle = None
-        self.channels = [10000] * 10
+        self.channels = [10000] * 12
 
     def timeToTwoPoints(self, timeInMin):
         for i in self.cycle:
@@ -154,7 +148,6 @@ class dc(Mode, Time, State):
         tmInMin = self.timeInSeconds() / 60
         points = [i for i in zip(*self.timeToTwoPoints(tmInMin))
                   ] if len(self.cycle) > 2 else [i for i in zip(*self.cycle)]
-        # logger.debug(f"Points= {points}")
         pointsChannels, pointsTimes = points[:-1], points[-1]
         if pointsTimes[0] < tmInMin < pointsTimes[1]:
             delta = pointsTimes[1] - pointsTimes[0] if pointsTimes[1] < 1440 else (
@@ -166,7 +159,6 @@ class dc(Mode, Time, State):
             couple = [10000 - i for i in couple]
             k = (couple[1] - couple[0]) / delta if couple[0] != couple[1] else 0
             channels.append((int(couple[0] + (k * (tmInMin - pointsTimes[0])))))
-        # logger.debug(f"Channels calculated:\n{channels}")
         return channels
 
     def setChannels(self, mess, connect):
@@ -177,14 +169,13 @@ class dc(Mode, Time, State):
         logger.success(f"[SC] Channels: {self.channels}")
 
     def getChannels(self, mess, connect):
-        if self.cycle:
+        if self.mode == '20':
+            Write(f"#GC{US.join([f'{10000-n:05d}' for n in self.channels])}{ACK}", connect)
+        elif self.cycle:
             timeNow = time.time() + self.deltaTime
             self.channels = self.calcChannels(self.cycle, timeNow)
-        if self.mode == 20:
-            Write(f"#GC{US.join([f'{10000-n:05d}' for n in self.channels])}{ACK}", connect)
-        else:
             Write(f"#GC{US.join([f'{n:05d}' for n in self.channels])}{ACK}", connect)
-        logger.success(f"[GC] Channels: {self.channels}")
+        logger.success(f"[GC] Mode: {self.mode} Channels: {self.channels}")
 
     def HashCalc(self, cycle=None):
         if not cycle:
