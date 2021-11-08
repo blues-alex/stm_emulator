@@ -60,13 +60,12 @@ def CycleReader(connect):
     mess = b''
     b = connect.read()
     if b in map(bytes, [[4], [3]]):
-        # logger.debug(f"End of cycle: {b[0]:02x}")
         return b
     while b not in map(bytes, [[4], [3], [0x1e]]):
         b = connect.read()
         mess += b
-    # logger.debug(f"cycleWriter mess:\n{mess}")
-    return mess + connect.read(2)
+    mess += connect.read(2)
+    return mess
 
 
 def Handler(mess, connect):
@@ -88,6 +87,9 @@ def Handler(mess, connect):
                         parse_point = [int(i) for i in parse_point]
                         cycle.append(parse_point)
                         Write(ACK, connect)
+                    else:
+                        Write(NAK, connect)
+                        logger.error(f"Point incorrect!: {point}. sending NAK")
                 elif len(point) and point[0] == 3:
                     DC.cycle = cycle
                     DC.setHash(DC.HashCalc(cycle=cycle))
