@@ -8,5 +8,5 @@ cd stm_emulator
 poetry env use python3.7 # or ^3.7
 poetry shell
 poetry install
-python3 ./emulatorStart.py ${/dev/tnt[X]}
+python3 ./emulatorStart.py ${/dev/tnt[X]} (requirement tty0tty)
 ```
