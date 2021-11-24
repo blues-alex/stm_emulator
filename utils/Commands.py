@@ -42,13 +42,13 @@ class Time:
         self.deltaTime = 0
 
     def timeInSeconds(self):
-        struct = time.localtime(time.time() + self.deltaTime)
+        struct = time.gmtime(time.time() + self.deltaTime)
         inSec = struct.tm_hour * 60 * 60 + struct.tm_min * 60 + struct.tm_sec
         return inSec
 
     def getTime(self, connect, mess=None):
         if self.deltaTime is not None:
-            tStruct = time.localtime(time.time() + self.deltaTime)
+            tStruct = time.gmtime(time.time() + self.deltaTime)
             tm = time.strftime('#GT%H%M%d0%w%m%y', tStruct)
             Write(tm + ACK, connect)
             logger.success(f"[GT]: {tm} - {time.strftime('%d.%m.%Y %H:%M', tStruct)}")
@@ -145,6 +145,7 @@ class dc(Mode, Time, State):
 
     def calcChannels(self, cycle, tm):
         tmInMin = self.timeInSeconds() / 60
+        # logger.debug(f"calcChannels: Timre in min. = {tmInMin} ({time.strftime('%H:%M', time.gmtime(tmInMin * 60))})")
         points = [i for i in zip(*self.timeToTwoPoints(tmInMin))
                   ] if len(self.cycle) > 2 else [i for i in zip(*self.cycle)]
         pointsChannels, pointsTimes = points[:-1], points[-1]
