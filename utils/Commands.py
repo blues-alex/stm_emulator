@@ -145,7 +145,7 @@ class dc(Mode, Time, State):
 
     def calcChannels(self, cycle, tm):
         tmInMin = self.timeInSeconds() / 60
-        # logger.debug(f"calcChannels: Timre in min. = {tmInMin} ({time.strftime('%H:%M', time.gmtime(tmInMin * 60))})")
+        logger.debug(f"calcChannels: Timre in min. = {tmInMin} ({time.strftime('%H:%M', time.gmtime(tmInMin * 60))})")
         points = [i for i in zip(*self.timeToTwoPoints(tmInMin))
                   ] if len(self.cycle) > 2 else [i for i in zip(*self.cycle)]
         pointsChannels, pointsTimes = points[:-1], points[-1]
