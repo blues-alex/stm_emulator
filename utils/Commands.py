@@ -167,7 +167,7 @@ class dc(Mode, Time, State):
         mess = byteToStr(mess)
         logger.debug(f"Incomming [SC] {mess}")
         if self.mode == '20':
-            self.channels = [10000 - int(i)
+            self.channels = [int(i)
                              for i in mess[mess.index('SC') + 5:mess.index(ENQ)].split(US)]
             Write(DONE, connect)
             logger.success(f"[SC] Channels: {self.channels}")
