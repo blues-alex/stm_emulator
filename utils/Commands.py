@@ -176,7 +176,7 @@ class dc(Mode, Time, State):
 
     def getChannels(self, mess, connect):
         if self.mode == '20':
-            Write(f"#GC{US.join([f'{n:05d}' for n in self.channels])}{ACK}", connect)
+            Write(f"#GC{US.join([f'{10000 - n:05d}' for n in self.channels])}{ACK}", connect)
         elif self.cycle:
             timeNow = time.time() + self.deltaTime
             self.channels = self.calcChannels(self.cycle, timeNow)
