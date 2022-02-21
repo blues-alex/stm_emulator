@@ -176,12 +176,10 @@ class dc(Mode, Time, State):
 
     def getChannels(self, mess, connect):
         if self.mode == '20':
-            logger.debug(f"Cycle channels state (Mode 20): {self.channels}")
             Write(f"#GC{US.join([f'{n:05d}' for n in self.channels])}{ACK}", connect)
         elif self.cycle:
             timeNow = time.time() + self.deltaTime
             self.channels = self.calcChannels(self.cycle, timeNow)
-            logger.debug(f"Cycle channels state (Mode 10): {self.channels}")
             Write(f"#GC{US.join([f'{n:05d}' for n in self.channels])}{ACK}", connect)
         logger.success(f"[GC] Mode: {self.mode} Channels: {self.channels}")
 
