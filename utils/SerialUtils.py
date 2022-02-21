@@ -100,6 +100,7 @@ class Connection:
 
         def writeMessage(self, mess):
             result = b''
+            logger.debug(f"Out message: {mess}")
             self.sr.write(mess)
             timeout = time.time()
             data = False

@@ -69,6 +69,7 @@ def CycleReader(connect):
 
 
 def Handler(mess, connect):
+    logger.debug(f"Incomming message: {mess}")
     if messCrcCheck(mess):
         if b'\x24' in mess:
             req = byteToStr(mess[mess.index(b'\x24') + 1:mess.index(b'\x24') + 3])

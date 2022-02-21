@@ -19,6 +19,7 @@ def HoursToMin(tm: str):
 
 @logger.catch
 def Write(mess: str, connect):
+    logger.debug(f"Writting: {mess}")
     connect.write(crcAdd(mess))
 
 
@@ -28,8 +29,8 @@ def GL(connect, mess=None):
 
 
 def GV(connect, mess=None):
-    string_version = '#GVRLLh151Cs053b'
-    # version = '#GVRLLh151Cs047m'
+    # string_version = '#GVRLLh151Cs053b'
+    string_version = '#GVRLLh151Cs047m'
     Write(string_version + ACK, connect)
     logger.success(f"[GV]: {string_version}")
 
@@ -145,7 +146,8 @@ class dc(Mode, Time, State):
 
     def calcChannels(self, cycle, tm):
         tmInMin = self.timeInSeconds() / 60
-        logger.debug(f"calcChannels: Timre in min. = {tmInMin} ({time.strftime('%H:%M', time.gmtime(tmInMin * 60))})")
+        logger.debug(
+            f"calcChannels: Time in min. = {round(tmInMin,2)} ({time.strftime('%H:%M:%S', time.gmtime(tmInMin * 60))})")
         points = [i for i in zip(*self.timeToTwoPoints(tmInMin))
                   ] if len(self.cycle) > 2 else [i for i in zip(*self.cycle)]
         pointsChannels, pointsTimes = points[:-1], points[-1]
@@ -163,6 +165,7 @@ class dc(Mode, Time, State):
 
     def setChannels(self, mess, connect):
         mess = byteToStr(mess)
+        logger.debug(f"Incomming [SC] {mess}")
         if self.mode == '20':
             self.channels = [10000 - int(i)
                              for i in mess[mess.index('SC') + 5:mess.index(ENQ)].split(US)]
@@ -173,7 +176,7 @@ class dc(Mode, Time, State):
 
     def getChannels(self, mess, connect):
         if self.mode == '20':
-            Write(f"#GC{US.join([f'{10000-n:05d}' for n in self.channels])}{ACK}", connect)
+            Write(f"#GC{US.join([f'{n:05d}' for n in self.channels])}{ACK}", connect)
         elif self.cycle:
             timeNow = time.time() + self.deltaTime
             self.channels = self.calcChannels(self.cycle, timeNow)
